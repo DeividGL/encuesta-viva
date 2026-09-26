@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d14">
+  <meta name="description" content="Encuesta en vivo: experiencia programando y uso de IA para escribir código.">
+  <title>Encuesta en vivo</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #141824;
+      --surface-2: #1c2130;
+      --border: #2a3144;
+      --text: #eef1f8;
+      --muted: #8d96ad;
+      --accent: #8b7bff;
+      --accent-2: #3ad6c5;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(139, 123, 255, 0.16), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(58, 214, 197, 0.10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 16px 24px;
+    }
+
+    header { margin-bottom: 28px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      background: rgba(58, 214, 197, 0.1);
+      border: 1px solid rgba(58, 214, 197, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    .badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      line-height: 1.15;
+      margin: 14px 0 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle { color: var(--muted); margin: 0; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .q-num {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      line-height: 1.3;
+      margin: 6px 0 18px;
+    }
+
+    .options { display: grid; gap: 12px; }
+
+    .option {
+      appearance: none;
+      width: 100%;
+      min-height: 60px;
+      padding: 16px 20px;
+      font: inherit;
+      font-size: 1.08rem;
+      font-weight: 600;
+      text-align: left;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.12s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .option:hover { border-color: var(--accent); background: #232a3d; }
+    .option:active { transform: scale(0.98); }
+    .option:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    /* Resultados */
+    .results { display: grid; gap: 14px; }
+
+    .row-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-size: 0.98rem;
+    }
+
+    .row-label { font-weight: 600; }
+
+    .row.mine .row-label::after {
+      content: "Tu voto";
+      margin-left: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--accent-2);
+      padding: 2px 8px;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    .row-pct {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .row-count { color: var(--muted); font-weight: 400; font-size: 0.85rem; }
+
+    .track {
+      height: 14px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), #b3a8ff);
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .row.mine .bar { background: linear-gradient(90deg, var(--accent-2), #8ff0e5); }
+
+    .total {
+      margin: 18px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .total strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+    .actions { text-align: center; margin-top: 8px; }
+
+    .reset {
+      appearance: none;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.85rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .reset:hover { color: var(--text); }
+    .reset:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
+
+    footer {
+      text-align: center;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+
+    footer strong {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nowrap { white-space: nowrap; }
+
+    .fade-in { animation: fadeIn 0.35s ease both; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge">En vivo</span>
+      <h1>Encuesta para devs</h1>
+      <p class="subtitle">Dos preguntas rápidas. Vota y mira los resultados al instante.</p>
+    </header>
+
+    <div id="survey"></div>
+
+    <div class="actions">
+      <button type="button" class="reset" id="reset">Reiniciar mis votos</button>
+    </div>
+  </main>
+
+  <footer>
+    Construida en vivo con <strong>Claude Code</strong> — <span class="nowrap">Next-Gen Coding</span>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var QUESTIONS = [
+        {
+          id: "experiencia",
+          text: "¿Cuántos años llevas programando?",
+          options: ["<2", "2-5", "6-10", ">10"]
+        },
+        {
+          id: "uso-ia",
+          text: "¿Ya usas IA para escribir código?",
+          options: ["Nunca", "A veces", "A diario", "La IA escribe casi todo mi código"]
+        }
+      ];
+
+      var STORAGE_KEY = "encuesta-viva:v1";
+
+      // Almacenamiento seguro: si localStorage no está disponible, usa memoria.
+      var memoryStore = null;
+
+      function emptyState() {
+        var state = { tallies: {}, myVotes: {} };
+        QUESTIONS.forEach(function (q) {
+          state.tallies[q.id] = q.options.map(function () { return 0; });
+        });
+        return state;
+      }
+
+      function load() {
+        var state = emptyState();
+        var raw = null;
+        try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = memoryStore; }
+        if (!raw) return state;
+        try {
+          var saved = JSON.parse(raw);
+          QUESTIONS.forEach(function (q) {
+            var t = saved.tallies && saved.tallies[q.id];
+            if (Array.isArray(t) && t.length === q.options.length) {
+              state.tallies[q.id] = t.map(function (n) { return Math.max(0, Number(n) || 0); });
+            }
+            var v = saved.myVotes && saved.myVotes[q.id];
+            if (typeof v === "number" && v >= 0 && v < q.options.length) {
+              state.myVotes[q.id] = v;
+            }
+          });
+        } catch (e) { /* datos corruptos: se ignoran */ }
+        return state;
+      }
+
+      function save(state) {
+        var raw = JSON.stringify(state);
+        try { localStorage.setItem(STORAGE_KEY, raw); } catch (e) { memoryStore = raw; }
+      }
+
+      var state = load();
+      var container = document.getElementById("survey");
+
+      function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      }
+
+      function renderQuestion(q, index, animate) {
+        var card = el("section", "card");
+        card.setAttribute("aria-labelledby", "q-" + q.id);
+        card.appendChild(el("div", "q-num", "Pregunta " + (index + 1) + " de " + QUESTIONS.length));
+        var title = el("h2", null, q.text);
+        title.id = "q-" + q.id;
+        card.appendChild(title);
+
+        var myVote = state.myVotes[q.id];
+        if (myVote === undefined) {
+          var opts = el("div", "options");
+          q.options.forEach(function (label, i) {
+            var btn = el("button", "option", label);
+            btn.type = "button";
+            btn.addEventListener("click", function () { vote(q.id, i); });
+            opts.appendChild(btn);
+          });
+          card.appendChild(opts);
+        } else {
+          card.appendChild(renderResults(q, myVote, animate));
+        }
+        return card;
+      }
+
+      function renderResults(q, myVote, animate) {
+        var wrap = el("div", animate ? "fade-in" : "");
+        var list = el("div", "results");
+        list.setAttribute("role", "list");
+        var tallies = state.tallies[q.id];
+        var total = tallies.reduce(function (a, b) { return a + b; }, 0);
+        var bars = [];
+
+        q.options.forEach(function (label, i) {
+          var count = tallies[i];
+          var pct = total ? Math.round((count / total) * 100) : 0;
+          var row = el("div", "row" + (i === myVote ? " mine" : ""));
+          row.setAttribute("role", "listitem");
+
+          var head = el("div", "row-head");
+          head.appendChild(el("span", "row-label", label));
+          var pctEl = el("span", "row-pct", pct + "% ");
+          pctEl.appendChild(el("span", "row-count", "(" + count + ")"));
+          head.appendChild(pctEl);
+
+          var track = el("div", "track");
+          track.setAttribute("role", "progressbar");
+          track.setAttribute("aria-label", label);
+          track.setAttribute("aria-valuemin", "0");
+          track.setAttribute("aria-valuemax", "100");
+          track.setAttribute("aria-valuenow", String(pct));
+          var bar = el("div", "bar");
+          track.appendChild(bar);
+
+          row.appendChild(head);
+          row.appendChild(track);
+          list.appendChild(row);
+          bars.push({ bar: bar, pct: pct });
+        });
+
+        wrap.appendChild(list);
+        var totalEl = el("p", "total", "Total de votos: ");
+        totalEl.appendChild(el("strong", null, String(total)));
+        wrap.appendChild(totalEl);
+
+        // Anima las barras desde 0 hasta su porcentaje.
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            bars.forEach(function (b) { b.bar.style.width = b.pct + "%"; });
+          });
+        });
+        return wrap;
+      }
+
+      function render(animateId) {
+        container.textContent = "";
+        QUESTIONS.forEach(function (q, i) {
+          container.appendChild(renderQuestion(q, i, q.id === animateId));
+        });
+        var hasVotes = Object.keys(state.myVotes).length > 0;
+        document.getElementById("reset").hidden = !hasVotes;
+      }
+
+      function vote(questionId, optionIndex) {
+        if (state.myVotes[questionId] !== undefined) return;
+        state.tallies[questionId][optionIndex] += 1;
+        state.myVotes[questionId] = optionIndex;
+        save(state);
+        render(questionId);
+      }
+
+      document.getElementById("reset").addEventListener("click", function () {
+        // Quita solo los votos de este dispositivo del conteo.
+        Object.keys(state.myVotes).forEach(function (qid) {
+          var i = state.myVotes[qid];
+          state.tallies[qid][i] = Math.max(0, state.tallies[qid][i] - 1);
+        });
+        state.myVotes = {};
+        save(state);
+        render(null);
+      });
+
+      // Sincroniza entre pestañas del mismo dispositivo.
+      window.addEventListener("storage", function (e) {
+        if (e.key === STORAGE_KEY) {
+          state = load();
+          render(null);
+        }
+      });
+
+      render(null);
+    })();
+  </script>
+</body>
+</html>
