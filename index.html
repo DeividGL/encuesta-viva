@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="Encuesta en vivo: experiencia programando y uso de IA para escribir código.">
+  <title>Encuesta en vivo</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --bg-2: #11141b;
+      --card: #161a23;
+      --card-border: #242a36;
+      --text: #eef1f6;
+      --muted: #9aa3b2;
+      --accent: #7c5cff;
+      --accent-2: #22d3ee;
+      --track: #222836;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(124, 92, 255, .18), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(34, 211, 238, .12), transparent 60%),
+        var(--bg);
+      background-attachment: fixed;
+      line-height: 1.5;
+    }
+    main {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 16px 24px;
+      flex: 1;
+    }
+    header { text-align: center; margin-bottom: 28px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(124, 92, 255, .14);
+      border: 1px solid rgba(124, 92, 255, .35);
+      color: #c9bcff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ff4d6d;
+      box-shadow: 0 0 0 0 rgba(255, 77, 109, .7);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 109, .6); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 77, 109, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0); }
+    }
+    h1 {
+      margin: 14px 0 6px;
+      font-size: clamp(28px, 6vw, 40px);
+      line-height: 1.15;
+      letter-spacing: -.02em;
+      background: linear-gradient(90deg, #fff, #c9bcff 60%, #8be9f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle { margin: 0; color: var(--muted); font-size: 16px; }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+    .q-num {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+    }
+    .card h2 { margin: 6px 0 18px; font-size: clamp(20px, 4.6vw, 24px); line-height: 1.25; }
+
+    .options { display: grid; gap: 12px; }
+    @media (min-width: 560px) { .options { grid-template-columns: 1fr 1fr; } }
+    .opt {
+      appearance: none;
+      width: 100%;
+      min-height: 64px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .2s ease, background .2s ease;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .opt:hover { border-color: var(--accent); background: #171b26; }
+    .opt:active { transform: scale(.98); }
+    .opt:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+
+    .results { display: none; }
+    .card.voted .options { display: none; }
+    .card.voted .results { display: block; }
+
+    .bar-row { margin-bottom: 14px; }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+    .bar-label .name { font-weight: 600; }
+    .bar-label .mine {
+      margin-left: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-2);
+      white-space: nowrap;
+    }
+    .bar-label .pct { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .bar-label .cnt { color: var(--muted); font-weight: 500; font-size: 14px; margin-left: 4px; }
+    .track {
+      height: 14px;
+      border-radius: 999px;
+      background: var(--track);
+      overflow: hidden;
+    }
+    .fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .9s cubic-bezier(.2, .8, .2, 1);
+    }
+    .bar-row.is-mine .fill { box-shadow: 0 0 14px rgba(34, 211, 238, .55); }
+    .total {
+      margin: 16px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .total strong { color: var(--text); }
+
+    .reset-wrap { text-align: center; margin-top: 8px; }
+    .reset {
+      appearance: none;
+      background: none;
+      border: 0;
+      color: var(--muted);
+      font: inherit;
+      font-size: 14px;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      padding: 10px 14px;
+      cursor: pointer;
+      opacity: .75;
+    }
+    .reset:hover { opacity: 1; color: var(--text); }
+    .reset:focus-visible { outline: 2px solid var(--accent-2); border-radius: 8px; }
+
+    footer {
+      text-align: center;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+    }
+    footer strong { color: #c9bcff; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fill, .opt { transition: none; }
+      .dot { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="badge"><span class="dot" aria-hidden="true"></span>En vivo</span>
+      <h1>Encuesta para devs</h1>
+      <p class="subtitle">Toca una opción y mira los resultados al instante.</p>
+    </header>
+
+    <div id="polls"></div>
+
+    <div class="reset-wrap">
+      <button type="button" class="reset" id="reset">Reiniciar mis votos</button>
+    </div>
+  </main>
+
+  <footer>
+    Construida en vivo con <strong>Claude Code</strong> — <span style="white-space:nowrap">Next-Gen Coding</span>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var STORAGE_KEY = "encuesta-viva:v1";
+
+      var QUESTIONS = [
+        {
+          id: "experiencia",
+          title: "¿Cuántos años llevas programando?",
+          options: ["<2", "2-5", "6-10", ">10"]
+        },
+        {
+          id: "ia",
+          title: "¿Ya usas IA para escribir código?",
+          options: ["Nunca", "A veces", "A diario", "La IA escribe casi todo mi código"]
+        }
+      ];
+
+      // Estado: { tallies: { [qid]: number[] }, mine: { [qid]: index } }
+      function emptyState() {
+        var s = { tallies: {}, mine: {} };
+        QUESTIONS.forEach(function (q) {
+          s.tallies[q.id] = q.options.map(function () { return 0; });
+        });
+        return s;
+      }
+
+      function load() {
+        var s = emptyState();
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return s;
+          var data = JSON.parse(raw);
+          QUESTIONS.forEach(function (q) {
+            var t = data && data.tallies && data.tallies[q.id];
+            if (Array.isArray(t) && t.length === q.options.length) {
+              s.tallies[q.id] = t.map(function (n) { return Math.max(0, Number(n) || 0); });
+            }
+            var m = data && data.mine && data.mine[q.id];
+            if (typeof m === "number" && m >= 0 && m < q.options.length) s.mine[q.id] = m;
+          });
+        } catch (e) { /* almacenamiento no disponible o corrupto */ }
+        return s;
+      }
+
+      function save(s) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) { /* sin persistencia */ }
+      }
+
+      var state = load();
+      var container = document.getElementById("polls");
+      var cards = {};
+
+      function el(tag, cls, text) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text != null) n.textContent = text;
+        return n;
+      }
+
+      function build() {
+        QUESTIONS.forEach(function (q, qi) {
+          var card = el("section", "card");
+          card.setAttribute("aria-labelledby", "q-" + q.id);
+          card.appendChild(el("div", "q-num", "Pregunta " + (qi + 1) + " de " + QUESTIONS.length));
+          var h = el("h2", null, q.title);
+          h.id = "q-" + q.id;
+          card.appendChild(h);
+
+          var opts = el("div", "options");
+          q.options.forEach(function (label, oi) {
+            var b = el("button", "opt", label);
+            b.type = "button";
+            b.addEventListener("click", function () { vote(q.id, oi); });
+            opts.appendChild(b);
+          });
+          card.appendChild(opts);
+
+          var res = el("div", "results");
+          res.setAttribute("aria-live", "polite");
+          var rows = q.options.map(function (label) {
+            var row = el("div", "bar-row");
+            var lab = el("div", "bar-label");
+            var left = el("span");
+            left.appendChild(el("span", "name", label));
+            var mine = el("span", "mine", "✓ Tu voto");
+            mine.hidden = true;
+            left.appendChild(mine);
+            var right = el("span");
+            var pct = el("span", "pct", "0%");
+            var cnt = el("span", "cnt", "(0)");
+            right.appendChild(pct);
+            right.appendChild(cnt);
+            lab.appendChild(left);
+            lab.appendChild(right);
+            var track = el("div", "track");
+            var fill = el("div", "fill");
+            track.appendChild(fill);
+            row.appendChild(lab);
+            row.appendChild(track);
+            res.appendChild(row);
+            return { row: row, mine: mine, pct: pct, cnt: cnt, fill: fill };
+          });
+          var total = el("p", "total");
+          res.appendChild(total);
+          card.appendChild(res);
+
+          container.appendChild(card);
+          cards[q.id] = { card: card, rows: rows, total: total };
+        });
+      }
+
+      function render() {
+        QUESTIONS.forEach(function (q) {
+          var c = cards[q.id];
+          var tallies = state.tallies[q.id];
+          var sum = tallies.reduce(function (a, b) { return a + b; }, 0);
+          var hasVoted = Object.prototype.hasOwnProperty.call(state.mine, q.id);
+          c.card.classList.toggle("voted", hasVoted);
+
+          c.rows.forEach(function (r, i) {
+            var p = sum ? Math.round((tallies[i] / sum) * 100) : 0;
+            var isMine = hasVoted && state.mine[q.id] === i;
+            r.pct.textContent = p + "%";
+            r.cnt.textContent = "(" + tallies[i] + ")";
+            r.mine.hidden = !isMine;
+            r.row.classList.toggle("is-mine", isMine);
+            r.fill.style.width = hasVoted ? p + "%" : "0";
+          });
+          c.total.innerHTML = "";
+          c.total.appendChild(document.createTextNode("Total: "));
+          c.total.appendChild(el("strong", null, String(sum)));
+          c.total.appendChild(document.createTextNode(sum === 1 ? " voto" : " votos"));
+        });
+      }
+
+      function vote(qid, index) {
+        if (Object.prototype.hasOwnProperty.call(state.mine, qid)) return;
+        state.tallies[qid][index] += 1;
+        state.mine[qid] = index;
+        save(state);
+        // Mostrar resultados con barras en 0 y animar en el siguiente frame.
+        var c = cards[qid];
+        c.rows.forEach(function (r) { r.fill.style.width = "0"; });
+        c.card.classList.add("voted");
+        void c.card.offsetWidth;
+        requestAnimationFrame(render);
+      }
+
+      function resetMine() {
+        QUESTIONS.forEach(function (q) {
+          if (Object.prototype.hasOwnProperty.call(state.mine, q.id)) {
+            var i = state.mine[q.id];
+            state.tallies[q.id][i] = Math.max(0, state.tallies[q.id][i] - 1);
+          }
+        });
+        state.mine = {};
+        save(state);
+        render();
+      }
+
+      document.getElementById("reset").addEventListener("click", resetMine);
+
+      // Sincroniza entre pestañas del mismo dispositivo.
+      window.addEventListener("storage", function (e) {
+        if (e.key === STORAGE_KEY) { state = load(); render(); }
+      });
+
+      build();
+      render();
+    })();
+  </script>
+</body>
+</html>
