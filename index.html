@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d14">
+  <meta name="description" content="Encuesta en vivo: experiencia programando y uso de IA para escribir código.">
+  <title>Encuesta en vivo</title>
+  <style>
+    :root {
+      --bg: #0b0d14;
+      --surface: #141824;
+      --surface-2: #1c2132;
+      --border: #2a3046;
+      --text: #eef1f8;
+      --muted: #9aa3bc;
+      --accent: #7c5cff;
+      --accent-2: #22d3ee;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(124, 92, 255, .22), transparent 60%),
+        radial-gradient(800px 500px at 110% 10%, rgba(34, 211, 238, .14), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+    header, main, footer {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    header { padding-top: 40px; padding-bottom: 8px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(20, 24, 36, .7);
+      color: var(--muted);
+      font-size: .8rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, .6);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, .6); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    h1 {
+      margin: 16px 0 6px;
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      background: linear-gradient(90deg, #fff, #c9bfff 50%, var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lead { margin: 0; color: var(--muted); }
+    main { flex: 1; padding-top: 16px; padding-bottom: 24px; display: grid; gap: 20px; }
+    .card {
+      background: linear-gradient(180deg, var(--surface), rgba(20, 24, 36, .85));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+    .q-num { color: var(--accent-2); font-weight: 700; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
+    h2 { margin: 6px 0 16px; font-size: 1.3rem; line-height: 1.25; }
+    .options { display: grid; gap: 12px; }
+    @media (min-width: 560px) { .options { grid-template-columns: 1fr 1fr; } }
+    .opt {
+      appearance: none;
+      width: 100%;
+      min-height: 60px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--text);
+      font: inherit;
+      font-size: 1.08rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .2s ease, background .2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .opt:hover { border-color: var(--accent); background: #232943; }
+    .opt:active { transform: scale(.98); }
+    .opt:focus-visible { outline: 3px solid var(--accent-2); outline-offset: 2px; }
+    .results { display: grid; gap: 14px; }
+    .row-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-weight: 600; }
+    .row-head .pct { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .row.mine .row-head .label::after {
+      content: "Tu voto";
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(124, 92, 255, .2);
+      color: #c9bfff;
+      font-size: .72rem;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+    .track { height: 14px; border-radius: 999px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--border); }
+    .bar {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #4b5574, #6b7699);
+      transition: width .9s cubic-bezier(.2, .8, .2, 1);
+    }
+    .row.mine .bar { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+    .total { margin: 16px 0 0; color: var(--muted); font-size: .92rem; }
+    .total strong { color: var(--text); font-variant-numeric: tabular-nums; }
+    .actions { display: flex; justify-content: center; }
+    .reset {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: .85rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      padding: 10px 12px;
+      cursor: pointer;
+      opacity: .75;
+    }
+    .reset:hover, .reset:focus-visible { opacity: 1; color: var(--text); }
+    footer {
+      padding-top: 16px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      text-align: center;
+      color: var(--muted);
+      font-size: .9rem;
+      border-top: 1px solid var(--border);
+    }
+    footer strong { color: var(--text); }
+    .fade-in { animation: fade .35s ease both; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .bar, .opt, .fade-in, .dot { transition: none; animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="badge"><span class="dot" aria-hidden="true"></span>Encuesta en vivo</span>
+    <h1>¿Cómo programas hoy?</h1>
+    <p class="lead">Toca una opción para votar y ver los resultados al instante.</p>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+
+  <div class="actions">
+    <button type="button" class="reset" id="reset">Reiniciar mis votos</button>
+  </div>
+
+  <footer>
+    Construida en vivo con <strong>Claude Code</strong> — Next-Gen Coding
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var QUESTIONS = [
+        { id: "years", title: "¿Cuántos años llevas programando?", options: ["<2", "2-5", "6-10", ">10"] },
+        { id: "ai", title: "¿Ya usas IA para escribir código?", options: ["Nunca", "A veces", "A diario", "La IA escribe casi todo mi código"] }
+      ];
+      var KEY = "encuesta-viva:v1";
+
+      function emptyState() {
+        var s = { counts: {}, mine: {} };
+        QUESTIONS.forEach(function (q) { s.counts[q.id] = q.options.map(function () { return 0; }); });
+        return s;
+      }
+
+      function load() {
+        var s = emptyState();
+        try {
+          var raw = JSON.parse(localStorage.getItem(KEY) || "null");
+          if (raw && raw.counts && raw.mine) {
+            QUESTIONS.forEach(function (q) {
+              var c = raw.counts[q.id];
+              if (Array.isArray(c) && c.length === q.options.length) {
+                s.counts[q.id] = c.map(function (n) { return Math.max(0, Number(n) || 0); });
+              }
+              var m = raw.mine[q.id];
+              if (typeof m === "number" && m >= 0 && m < q.options.length) s.mine[q.id] = m;
+            });
+          }
+        } catch (e) { /* storage unavailable: use in-memory state */ }
+        return s;
+      }
+
+      function save() {
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+      }
+
+      var state = load();
+      var app = document.getElementById("app");
+
+      function el(tag, cls, text) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text != null) n.textContent = text;
+        return n;
+      }
+
+      function renderQuestion(q, idx) {
+        var card = el("section", "card fade-in");
+        card.setAttribute("aria-labelledby", "q-" + q.id);
+        card.appendChild(el("div", "q-num", "Pregunta " + (idx + 1)));
+        var h = el("h2", null, q.title);
+        h.id = "q-" + q.id;
+        card.appendChild(h);
+
+        if (state.mine[q.id] === undefined) {
+          var opts = el("div", "options");
+          q.options.forEach(function (label, i) {
+            var b = el("button", "opt", label);
+            b.type = "button";
+            b.addEventListener("click", function () { vote(q.id, i); });
+            opts.appendChild(b);
+          });
+          card.appendChild(opts);
+        } else {
+          var counts = state.counts[q.id];
+          var total = counts.reduce(function (a, b) { return a + b; }, 0);
+          var list = el("div", "results");
+          var bars = [];
+          q.options.forEach(function (label, i) {
+            var pct = total ? Math.round((counts[i] / total) * 100) : 0;
+            var row = el("div", "row" + (state.mine[q.id] === i ? " mine" : ""));
+            var head = el("div", "row-head");
+            head.appendChild(el("span", "label", label));
+            head.appendChild(el("span", "pct", pct + "% · " + counts[i]));
+            row.appendChild(head);
+            var track = el("div", "track");
+            track.setAttribute("role", "progressbar");
+            track.setAttribute("aria-label", label);
+            track.setAttribute("aria-valuemin", "0");
+            track.setAttribute("aria-valuemax", "100");
+            track.setAttribute("aria-valuenow", String(pct));
+            var bar = el("div", "bar");
+            track.appendChild(bar);
+            row.appendChild(track);
+            list.appendChild(row);
+            bars.push([bar, pct]);
+          });
+          card.appendChild(list);
+          var t = el("p", "total");
+          t.appendChild(document.createTextNode("Total de votos: "));
+          t.appendChild(el("strong", null, String(total)));
+          card.appendChild(t);
+          // Animate from 0 to target width on next frame.
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              bars.forEach(function (p) { p[0].style.width = p[1] + "%"; });
+            });
+          });
+        }
+        return card;
+      }
+
+      function render() {
+        app.textContent = "";
+        QUESTIONS.forEach(function (q, i) { app.appendChild(renderQuestion(q, i)); });
+      }
+
+      function vote(qid, i) {
+        if (state.mine[qid] !== undefined) return;
+        state.counts[qid][i] += 1;
+        state.mine[qid] = i;
+        save();
+        render();
+      }
+
+      document.getElementById("reset").addEventListener("click", function () {
+        // Remove only this device's own votes from the tallies.
+        QUESTIONS.forEach(function (q) {
+          var m = state.mine[q.id];
+          if (m !== undefined) state.counts[q.id][m] = Math.max(0, state.counts[q.id][m] - 1);
+        });
+        state.mine = {};
+        save();
+        render();
+      });
+
+      // Keep other tabs on this device in sync instantly.
+      window.addEventListener("storage", function (e) {
+        if (e.key === KEY) { state = load(); render(); }
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
